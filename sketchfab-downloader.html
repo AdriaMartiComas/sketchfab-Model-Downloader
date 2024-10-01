@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sketchfab Viewer API example</title>
+
+    <!-- Insert this script -->
+    <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
+</head>
+
+<body>
+    <!-- Insert an empty iframe with attributes -->
+    <iframe src="" id="api-frame" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+
+    <!-- Initialize the viewer -->
+    <script type="text/javascript">
+    // Function to get URL parameters
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+
+    var iframe = document.getElementById('api-frame');
+    var modelUid = getUrlParameter('modelUid'); // Get modelUid from URL parameters
+
+    // By default, the latest version of the viewer API will be used.
+    var client = new Sketchfab(iframe);
+
+    client.init(modelUid, {
+        success: function onSuccess(api) {
+            api.start();
+            api.addEventListener('viewerready', function() {
+
+                // Fetch model information using Sketchfab Data API
+                fetch(`https://api.sketchfab.com/v3/models/${modelUid}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let logMessages = '';
+                        logMessages += 'TÍTOL: ' + data.name + '\n';
+                        logMessages += '------------------------------------------------------------\n';
+                        logMessages += '\n';
+                        logMessages += 'DESCRIPCIÓ:\n ' + data.description + '\n\n';
+                        logMessages += '------------------------------------------------------------\n';
+                        logMessages += '\n';
+                        //const tags = data.tags.map(tag => tag.name).join(', ');
+                        const tags = Array.isArray(data.tags) ? data.tags.map(tag => tag.name).join(', ') : '';
+
+                        logMessages += 'TAGS:\n ' + tags + '\n\n';
+                        logMessages += '------------------------------------------------------------\n';
+                        logMessages += '\n';
+
+                        // Check if data.thumbnails and data.thumbnails.images are defined and contain at least 3 images
+                        const thumbnailImage = data.thumbnails && data.thumbnails.images && data.thumbnails.images.length > 0 
+                            ? data.thumbnails.images[0].url 
+                            : '';
+                        logMessages += 'ANOTACIONS:\n\n';
+
+                        // Viewer API is ready to use
+                        // Get annotations
+                        api.getAnnotationList(function(err, annotations) {
+                            if (!err) {
+                                annotations.forEach((annotation, index) => {
+                                    logMessages += 'ANOTACIÓ ' + (index + 1) + ': ';
+                                    logMessages += annotation.name + '\n';
+                                    logMessages += annotation.content.raw + '\n\n';
+                                    logMessages += '-----------------------------\n';
+                                    logMessages += '\n';
+                                });    
+                                downloadTextFile(data.name + '.txt', logMessages, () => {
+                                    downloadImage(thumbnailImage, data.name + '.png', closeTab);
+                                });
+                            } else {
+                                console.log('Error getting annotations');
+                            }
+                        });
+                    });
+            });
+        },
+        error: function onError() {
+            console.error('Viewer error');
+        }
+    });
+
+    // Function to download text file
+    function downloadTextFile(filename, text, callback) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+
+        if (callback) callback();
+    }
+
+    // Function to download image
+    function downloadImage(url, filename, callback) {
+        fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                var element = document.createElement('a');
+                element.href = URL.createObjectURL(blob);
+                element.download = filename;
+
+                document.body.appendChild(element);
+                element.click();
+                document.body.removeChild(element);
+
+                if (callback) callback();
+            })
+            .catch(console.error);
+    }
+
+    // Function to close the tab
+    function closeTab() {
+        window.close();
+    }
+
+    
+    </script>
+</body>
+</html>

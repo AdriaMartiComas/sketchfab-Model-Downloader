@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sketchfab Model Retriever</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif; /* Cambia 'Arial' por la fuente que prefieras */
+        }
+        #loadingIcon {
+            display: none;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sketchfab Model Downloader</h1>
+    <p>Using this downloader, you will get a .txt file with the title, description, tags, and annotations from each model, as well as a .jpg snapshot.</p> 
+    <p>Each model will open in a new tab and download the text and image. You need to enable your browser to open new tabs. Firefox is recommended.</p> 
+    <p>If there are many models, Sketchfab may block the downloads at some point. Wait a couple of hours before continuing the download (using the filter).</p>
+    <input type="text" id="usernameInput" placeholder="Enter Sketchfab username" required>
+    <button onclick="fetchModels()">Fetch Models</button>
+    <div id="loadingIcon">Loading</div>
+    <br>
+    <br>
+    <input type="text" id="filterInput" placeholder="Enter letter to filter">
+    <button id="filterBtn" onclick="filterModels()">Filter</button>
+    <br>
+    <br>
+    <button id="downloadAllBtn" onclick="downloadAllModels()">Download All</button>
+    <br>
+    <br>
+    <div id="modelCount"></div>
+    <div id="modelList"></div>
+
+    <script>
+        let nextUrl = '';
+        const modelList = document.getElementById('modelList');
+        const modelCount = document.getElementById('modelCount');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const sortBtn = document.getElementById('sortBtn');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+        const filterInput = document.getElementById('filterInput');
+        const loadingIcon = document.getElementById('loadingIcon');
+        let allModels = [];
+        let filteredModels = [];
+        let loadingInterval;
+
+        function fetchModels() {
+
+            const username = document.getElementById('usernameInput').value;
+            if (!username) {
+                alert('Username is required');
+                usernameInput.focus();
+                return;
+            }
+            const apiUrl = `https://api.sketchfab.com/v3/models?user=${username}&sort_by=name&type=models`;
+            modelList.innerHTML = '';
+            allModels = [];
+            loadingIcon.style.display = 'block'; // Mostrar el icono de cargando
+            startLoadingAnimation();
+            fetchAllModelPages(apiUrl, () => {
+                displayModels(allModels);
+                filteredModels = allModels;
+                loadingIcon.style.display = 'none'; // Ocultar el icono de cargando
+                stopLoadingAnimation();
+            });
+        }
+
+        function fetchAllModelPages(url, callback) {
+            fetch(url)
+                .then(response => {
+                    if (response.status === 429) {
+                        throw new Error('Sketchfab overload, wait a few hours before trying again');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.results && data.results.length > 0) {
+                        allModels = allModels.concat(data.results);
+                    }
+                    if (data.next) {
+                        fetchAllModelPages(data.next, callback);
+                    } else {
+                        allModels.sort((a, b) => a.name.localeCompare(b.name));
+                        filteredModels = allModels.slice(); // Initialize filteredModels with allModels
+                        callback(allModels);
+                    }
+                    filteredModels = allModels;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (error.message.includes('Sketchfab overload')) {
+                        alert(error.message);
+                    } else {
+                        modelList.innerHTML += `<p>${error.message}</p>`;
+                    }
+                    loadingIcon.style.display = 'none'; // Ocultar el icono de cargando en caso de error
+                    stopLoadingAnimation();
+                });
+        }
+
+        function displayModels(models) {
+            modelList.innerHTML = ''; // Clear the list before displaying
+            modelCount.innerHTML = `Total Models: ${models.length}`;
+            models.forEach(model => {
+                if (model) {
+                    const modelItem = document.createElement('div');
+                    modelItem.className = 'model-item';
+                    modelItem.innerHTML = `
+                        <p><strong>${model.name}</strong> (UID: ${model.uid})</p>
+                        <button class="open-btn" onclick="openModelInNewTab('${model.uid}')">Download</button>
+                    `;
+                    modelList.appendChild(modelItem);
+                }
+            });
+        }
+
+        function openModelInNewTab(uid) {
+            const url = `sketchfab-downloader.html?modelUid=${uid}`;
+            const newWindow = window.open(url, '_blank');
+        }
+
+        function downloadAllModels() {
+            let delay = 0;
+            console.log("Filtered models: \n" + filteredModels.length);
+            filteredModels.forEach((model, index) => {
+                setTimeout(() => {
+                    openModelInNewTab(model.uid);
+                }, delay);
+                delay += 2000; // Abre una nueva pestaña cada 2 segundos
+            });
+        }
+
+        function filterModels() {
+            const filterLetter = filterInput.value.toLowerCase();
+            const startCharCode = filterLetter.charCodeAt(0);
+            filteredModels = allModels.filter(model => {
+                const modelFirstLetter = model.name.toLowerCase().charAt(0);
+                const modelCharCode = modelFirstLetter.charCodeAt(0);
+                return modelCharCode >= startCharCode;
+            });
+            displayModels(filteredModels);
+        }
+
+        function startLoadingAnimation() {
+            let dots = 0;
+            loadingInterval = setInterval(() => {
+                dots = (dots + 1) % 11;
+                loadingIcon.textContent = 'Loading' + '.'.repeat(dots);
+            }, 500);
+        }
+
+        function stopLoadingAnimation() {
+            clearInterval(loadingInterval);
+            loadingIcon.textContent = 'Loading';
+        }
+    </script>
+</body>
+</html>
