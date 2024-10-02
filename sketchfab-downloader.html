@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sketchfab Viewer API example</title>
-
-    <!-- Insert this script -->
+    <title>Model Download</title>
     <script type="text/javascript" src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
 </head>
 
 <body>
-    <!-- Insert an empty iframe with attributes -->
-    <iframe src="" id="api-frame" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
 
-    <!-- Initialize the viewer -->
+    <iframe src="" id="api-frame" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
     <script type="text/javascript">
     // Function to get URL parameters
     function getUrlParameter(name) {
@@ -26,7 +22,6 @@
     var iframe = document.getElementById('api-frame');
     var modelUid = getUrlParameter('modelUid'); // Get modelUid from URL parameters
 
-    // By default, the latest version of the viewer API will be used.
     var client = new Sketchfab(iframe);
 
     client.init(modelUid, {
@@ -45,9 +40,7 @@
                         logMessages += 'DESCRIPCIÓ:\n ' + data.description + '\n\n';
                         logMessages += '------------------------------------------------------------\n';
                         logMessages += '\n';
-                        //const tags = data.tags.map(tag => tag.name).join(', ');
                         const tags = Array.isArray(data.tags) ? data.tags.map(tag => tag.name).join(', ') : '';
-
                         logMessages += 'TAGS:\n ' + tags + '\n\n';
                         logMessages += '------------------------------------------------------------\n';
                         logMessages += '\n';
