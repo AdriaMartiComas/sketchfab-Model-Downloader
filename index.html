@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sketchfab Model Retriever</title>
+    <title>Sketchfab Model Downloader</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -15,20 +15,27 @@
     </style>
 </head>
 <body>
+    <h1>Descàrrega de Models de Sketchfab</h1>
+    <p>Amb aquest descarregador, obtindràs un arxiu .txt amb el títol, descripció, etiquetes i anotacions de cada model, així com una captura de pantalla en format .jpg.</p> 
+    <p>Cada model s'obrirà en una nova pestanya i es descarregarà el text i la imatge. Has de permetre que el teu navegador obri pestanyes noves. Es recomana utilitzar Firefox.</p> 
+    <p>Si hi ha molts models, Sketchfab podria bloquejar les descàrregues en algun moment. Espera unes hores abans de continuar amb la descàrrega (utilitzant el filtre).</p>
+
+    <!-- English
     <h1>Sketchfab Model Downloader</h1>
     <p>Using this downloader, you will get a .txt file with the title, description, tags, and annotations from each model, as well as a .jpg snapshot.</p> 
     <p>Each model will open in a new tab and download the text and image. You need to enable your browser to open new tabs. Firefox is recommended.</p> 
     <p>If there are many models, Sketchfab may block the downloads at some point. Wait a couple of hours before continuing the download (using the filter).</p>
-    <input type="text" id="usernameInput" placeholder="Enter Sketchfab username" required>
-    <button onclick="fetchModels()">Fetch Models</button>
-    <div id="loadingIcon">Loading</div>
+    -->
+    <input type="text" id="usernameInput" placeholder="Introdueix el nom d'usuari" required>
+    <button onclick="fetchModels()">Mostrar Models</button>
+    <div id="loadingIcon">Carregant</div>
     <br>
     <br>
-    <input type="text" id="filterInput" placeholder="Enter letter to filter">
-    <button id="filterBtn" onclick="filterModels()">Filter</button>
+    <input type="text" id="filterInput" placeholder="Introdueix una lletra per filtrar">
+    <button id="filterBtn" onclick="filterModels()">Filtre</button>
     <br>
     <br>
-    <button id="downloadAllBtn" onclick="downloadAllModels()">Download All</button>
+    <button id="downloadAllBtn" onclick="downloadAllModels()">Descarrega-ho tot</button>
     <br>
     <br>
     <div id="modelCount"></div>
@@ -51,7 +58,7 @@
 
             const username = document.getElementById('usernameInput').value;
             if (!username) {
-                alert('Username is required');
+                alert('Es requereix el nom d'usuari de Sketchfab');
                 usernameInput.focus();
                 return;
             }
@@ -72,7 +79,7 @@
             fetch(url)
                 .then(response => {
                     if (response.status === 429) {
-                        throw new Error('Sketchfab overload, wait a few hours before trying again');
+                        throw new Error('Sobrecàrrega a Sketchfab, espera unes hores abans de tornar-ho a intentar');
                     }
                     return response.json();
                 })
@@ -91,7 +98,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    if (error.message.includes('Sketchfab overload')) {
+                    if (error.message.includes('Sobrecàrrega a Sketchfab')) {
                         alert(error.message);
                     } else {
                         modelList.innerHTML += `<p>${error.message}</p>`;
