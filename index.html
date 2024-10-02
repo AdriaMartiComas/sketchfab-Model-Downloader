@@ -6,7 +6,7 @@
     <title>Sketchfab Model Retriever</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif; /* Cambia 'Arial' por la fuente que prefieras */
+            font-family: 'Arial', sans-serif;
         }
         #loadingIcon {
             display: none;
@@ -58,12 +58,12 @@
             const apiUrl = `https://api.sketchfab.com/v3/models?user=${username}&sort_by=name&type=models`;
             modelList.innerHTML = '';
             allModels = [];
-            loadingIcon.style.display = 'block'; // Mostrar el icono de cargando
+            loadingIcon.style.display = 'block'; 
             startLoadingAnimation();
             fetchAllModelPages(apiUrl, () => {
                 displayModels(allModels);
                 filteredModels = allModels;
-                loadingIcon.style.display = 'none'; // Ocultar el icono de cargando
+                loadingIcon.style.display = 'none';
                 stopLoadingAnimation();
             });
         }
@@ -84,7 +84,7 @@
                         fetchAllModelPages(data.next, callback);
                     } else {
                         allModels.sort((a, b) => a.name.localeCompare(b.name));
-                        filteredModels = allModels.slice(); // Initialize filteredModels with allModels
+                        filteredModels = allModels.slice();
                         callback(allModels);
                     }
                     filteredModels = allModels;
@@ -96,13 +96,13 @@
                     } else {
                         modelList.innerHTML += `<p>${error.message}</p>`;
                     }
-                    loadingIcon.style.display = 'none'; // Ocultar el icono de cargando en caso de error
+                    loadingIcon.style.display = 'none';
                     stopLoadingAnimation();
                 });
         }
 
         function displayModels(models) {
-            modelList.innerHTML = ''; // Clear the list before displaying
+            modelList.innerHTML = ''; 
             modelCount.innerHTML = `Total Models: ${models.length}`;
             models.forEach(model => {
                 if (model) {
